@@ -1,0 +1,34 @@
+{
+  "name": "cold-locator",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "build:cities": "tsx scripts/build-cities.ts",
+    "preview": "vite preview",
+    "cf:dev": "wrangler dev",
+    "cf:deploy": "npm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "maplibre-gl": "^4.7.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.4.0",
+    "@cloudflare/workers-types": "^4.20241224.0",
+    "@tailwindcss/vite": "^4.1.7",
+    "@types/adm-zip": "^0.5.8",
+    "@types/node": "^22.15.21",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "adm-zip": "^0.5.17",
+    "tailwindcss": "^4.1.7",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  }
+}

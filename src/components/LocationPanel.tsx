@@ -1,0 +1,169 @@
+import { useState, useEffect, useRef } from "react";
+import type { UserLocation } from "../App";
+import type { TempUnit } from "../lib/mapUtils";
+import { formatTemp, geocodeCity, type GeocodingResult } from "../lib/mapUtils";
+import { fetchSingleWeather } from "../lib/weather";
+
+interface Props {
+  userLocation: UserLocation | null;
+  userTemp: number | null;
+  unit: TempUnit;
+  error: string | null;
+  onLocationSet: (loc: UserLocation, temp: number | null) => void;
+  onError: (err: string) => void;
+}
+
+type PanelState = "requesting" | "search" | "located" | "loading";
+
+export default function LocationPanel({
+  userLocation,
+  userTemp,
+  unit,
+  error,
+  onLocationSet,
+  onError,
+}: Props) {
+  const [state, setState] = useState<PanelState>("requesting");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<GeocodingResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (userLocation) {
+      setState("located");
+      return;
+    }
+    setState("requesting");
+    if (!navigator.geolocation) {
+      setState("search");
+      onError("Geolocation not supported by your browser.");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        setState("loading");
+        const { latitude: lat, longitude: lng } = pos.coords;
+        const weather = await fetchSingleWeather(lat, lng);
+        onLocationSet(
+          { lat, lng, label: "Your location" },
+          weather?.temperature ?? null
+        );
+        setState("located");
+      },
+      () => {
+        setState("search");
+        onError("Location access denied. Search for your city below.");
+      },
+      { timeout: 10000 }
+    );
+  }, []);
+
+  const handleSearchInput = (q: string) => {
+    setSearchQuery(q);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (q.length < 2) { setSuggestions([]); return; }
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      const results = await geocodeCity(q);
+      setSuggestions(results);
+      setSearching(false);
+    }, 400);
+  };
+
+  const handleSelectCity = async (r: GeocodingResult) => {
+    setState("loading");
+    setSuggestions([]);
+    setSearchQuery("");
+    const weather = await fetchSingleWeather(r.lat, r.lng);
+    onLocationSet(
+      {
+        lat: r.lat,
+        lng: r.lng,
+        label: r.admin1 ? `${r.name}, ${r.admin1}` : `${r.name}, ${r.country}`,
+      },
+      weather?.temperature ?? null
+    );
+    setState("located");
+  };
+
+  if (state === "located" && userLocation) {
+    return (
+      <div className="location-panel located" id="location-panel">
+        <div className="location-panel-inner">
+          <span className="location-label">📍 {userLocation.label}</span>
+          {userTemp !== null && (
+            <span className="location-temp">{formatTemp(userTemp, unit)}</span>
+          )}
+          <button
+            className="change-location-btn"
+            onClick={() => setState("search")}
+            id="change-location-btn"
+          >
+            Change
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="location-panel glass" id="location-panel">
+      <div className="location-panel-inner">
+        <div className="app-logo">🌡️</div>
+        <h1 className="app-title">Cold Locator</h1>
+        <p className="app-subtitle">Find places colder than where you are</p>
+
+        {state === "requesting" && (
+          <div className="location-status">
+            <div className="spinner" />
+            <span>Requesting your location…</span>
+          </div>
+        )}
+
+        {state === "loading" && (
+          <div className="location-status">
+            <div className="spinner" />
+            <span>Loading weather data…</span>
+          </div>
+        )}
+
+        {(state === "search" || state === "requesting") && (
+          <div className="search-container">
+            {error && <p className="location-error">{error}</p>}
+            <div className="search-input-wrap">
+              <input
+                id="city-search"
+                type="text"
+                placeholder="Search your city…"
+                value={searchQuery}
+                onChange={(e) => handleSearchInput(e.target.value)}
+                className="search-input"
+                autoComplete="off"
+              />
+              {searching && <div className="spinner search-spinner" />}
+            </div>
+            {suggestions.length > 0 && (
+              <ul className="suggestions-list" role="listbox">
+                {suggestions.map((r, i) => (
+                  <li
+                    key={i}
+                    role="option"
+                    className="suggestion-item"
+                    onClick={() => handleSelectCity(r)}
+                    id={`suggestion-${i}`}
+                  >
+                    <span className="suggestion-name">{r.name}</span>
+                    <span className="suggestion-meta">
+                      {r.admin1 ? `${r.admin1}, ` : ""}{r.country}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
