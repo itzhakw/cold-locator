@@ -5,3 +5,4 @@ dist-types/
 *.tsbuildinfo
 
 scripts/cities1000.zip
+deploy.md
