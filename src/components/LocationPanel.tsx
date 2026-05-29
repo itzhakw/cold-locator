@@ -119,7 +119,7 @@ export default function LocationPanel({
 
   if (state === "located" && userLocation) {
     return (
-      <div className="location-panel located" id="location-panel">
+      <div className={`location-panel located ${embed ? "embedded" : ""}`} id="location-panel">
         <div className="location-panel-inner">
           <span className="location-label">📍 {userLocation.label}</span>
           {userTemp !== null && (
@@ -151,7 +151,7 @@ export default function LocationPanel({
   }
 
   return (
-    <div className="location-panel glass" id="location-panel">
+    <div className={`location-panel glass ${embed ? "embedded" : ""}`} id="location-panel">
       <div className="location-panel-inner">
         <header>
           <div className="app-logo">🌡️</div>

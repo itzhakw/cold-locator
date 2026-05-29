@@ -682,6 +682,12 @@ body,
     width: calc(100% - 24px);
   }
 
+  .location-panel.located:not(.embedded) {
+    left: 12px;
+    transform: none;
+    width: calc(100% - 80px);
+  }
+
   .location-panel-inner {
     padding: 20px;
   }
