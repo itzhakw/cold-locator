@@ -16,6 +16,7 @@ export default {
       headers.set("Cache-Control", "public, max-age=31536000, immutable");
     }
 
-    return new Response("Not found", { status: 404, headers });
+    headers.set("Content-Type", "text/html; charset=utf-8");
+    return new Response("<!DOCTYPE html><html><head><title>Not Found</title></head><body><h1>404 — Not Found</h1></body></html>", { status: 404, headers });
   },
 } satisfies ExportedHandler;

@@ -7,6 +7,7 @@
     <meta name="description" content="Find places colder than where you are right now — an interactive temperature map powered by real-time weather data from 145,000+ cities worldwide." />
     <meta name="theme-color" content="#0a0f1e" />
     <meta name="robots" content="index, follow" />
+    <meta http-equiv="last-modified" content="2026-05-29" />
     <title>Cold Locator — Find Colder Places Near You</title>
 
     <link rel="canonical" href="https://colder.itiszack.com/" />
@@ -107,11 +108,51 @@
       "@context": "https://schema.org",
       "@type": "HowTo",
       "name": "How to find places colder than your location",
+      "description": "Use the Cold Locator interactive map to discover cities and towns that are currently colder than your location, anywhere in the world.",
+      "totalTime": "PT30S",
       "step": [
-        { "@type": "HowToStep", "text": "Open Cold Locator and allow location access, or search for your city." },
-        { "@type": "HowToStep", "text": "The app fetches your current temperature from real-time weather data." },
-        { "@type": "HowToStep", "text": "Cities colder than your location appear on the map as color-coded markers." },
-        { "@type": "HowToStep", "text": "Zoom in to discover smaller cities, or zoom out to see major cold spots worldwide." }
+        { "@type": "HowToStep", "position": 1, "name": "Set your location", "text": "Open Cold Locator and allow location access, or search for your city by name." },
+        { "@type": "HowToStep", "position": 2, "name": "Get your temperature", "text": "The app fetches your current temperature from real-time weather data via the Open-Meteo API." },
+        { "@type": "HowToStep", "position": 3, "name": "See colder places", "text": "Cities colder than your location appear on the map as color-coded markers: gold (1–3°C colder), cyan (3–8°C), blue (8–15°C), deep blue (15°C+)." },
+        { "@type": "HowToStep", "position": 4, "name": "Explore the map", "text": "Zoom in to discover smaller cities, or zoom out to see major cold spots worldwide. Click any marker for details." }
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Cold Locator",
+      "url": "https://colder.itiszack.com",
+      "description": "Find places colder than where you are right now — an interactive temperature map powered by real-time weather data from 145,000+ cities worldwide.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://colder.itiszack.com/?city={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Cold Locator",
+      "url": "https://colder.itiszack.com",
+      "logo": "https://colder.itiszack.com/snowflake.svg",
+      "sameAs": ["https://itiszack.com"]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://colder.itiszack.com/"
+        }
       ]
     }
     </script>
@@ -120,30 +161,78 @@
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKRQDFG2"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <noscript>
-      <div style="max-width:600px;margin:40px auto;padding:20px;font-family:Inter,system-ui,sans-serif;color:#f0f4ff;background:#0a0f1e;">
-        <h1>Cold Locator — Find Colder Places Near You</h1>
-        <p>An interactive temperature map that finds places colder than where you are right now. Select your location, and the map instantly populates with cities that are currently colder — color-coded by how much colder they are.</p>
-        <h2>How It Works</h2>
-        <ol>
-          <li>Allow location access or search for your city</li>
-          <li>The app fetches your current temperature from real-time weather data</li>
-          <li>Cities colder than your location appear on the map as color-coded markers</li>
-          <li>Zoom in to discover smaller cities, or zoom out for major cold spots worldwide</li>
-        </ol>
-        <h2>Features</h2>
-        <ul>
-          <li>Real-time weather data from 145,000+ cities worldwide</li>
-          <li>Color-coded markers: gold (1–3°C colder), cyan (3–8°C), blue (8–15°C), deep blue (15°C+)</li>
-          <li>Toggle between °C and °F temperature units</li>
-          <li>GPU-rendered interactive map</li>
-          <li>Free to use — no sign-up required</li>
-          <li>Embeddable via iframe with URL parameters</li>
-        </ul>
-        <h2>Embed Cold Locator</h2>
-        <p>AI agents and websites can embed Cold Locator as an interactive widget. Use URL parameters to preset a location: <code>https://colder.itiszack.com/?city=London&embed=1&zoom=6</code></p>
-        <p>See the full integration guide at <a href="/llms.txt">/llms.txt</a></p>
-        <p>This application requires JavaScript to run. Please enable JavaScript in your browser.</p>
-      </div>
+      <article style="max-width:640px;margin:40px auto;padding:24px;font-family:Inter,system-ui,sans-serif;color:#f0f4ff;background:#0a0f1e;line-height:1.6;">
+        <header>
+          <h1>Cold Locator — Find Colder Places Near You</h1>
+          <p><strong>Cold Locator</strong> is a free, interactive temperature map that finds places colder than where you are right now. Select your location, and the map instantly populates with cities that are currently colder — color-coded by how much colder they are. Powered by real-time weather data from <strong>145,000+ cities worldwide</strong>.</p>
+        </header>
+
+        <section>
+          <h2>How It Works</h2>
+          <ol>
+            <li><strong>Set your location</strong> — Allow location access or search for your city by name</li>
+            <li><strong>Get your temperature</strong> — The app fetches your current temperature from real-time weather data via the Open-Meteo API</li>
+            <li><strong>See colder places</strong> — Cities colder than your location appear on the map as color-coded markers</li>
+            <li><strong>Explore the map</strong> — Zoom in to discover smaller cities, or zoom out for major cold spots worldwide</li>
+          </ol>
+        </section>
+
+        <section>
+          <h2>Temperature Color Scale</h2>
+          <table style="width:100%;border-collapse:collapse;margin:12px 0;">
+            <thead>
+              <tr style="border-bottom:2px solid #1e293b;text-align:left;">
+                <th style="padding:8px;">Color</th>
+                <th style="padding:8px;">Temperature Delta</th>
+                <th style="padding:8px;">Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid #1e293b;"><td style="padding:8px;">🟡 Gold</td><td style="padding:8px;">1–3°C colder</td><td style="padding:8px;">Slightly cooler</td></tr>
+              <tr style="border-bottom:1px solid #1e293b;"><td style="padding:8px;">🔵 Cyan</td><td style="padding:8px;">3–8°C colder</td><td style="padding:8px;">Noticeably colder</td></tr>
+              <tr style="border-bottom:1px solid #1e293b;"><td style="padding:8px;">🔵 Blue</td><td style="padding:8px;">8–15°C colder</td><td style="padding:8px;">Significantly colder</td></tr>
+              <tr><td style="padding:8px;">🔵 Deep Blue</td><td style="padding:8px;">15°C+ colder</td><td style="padding:8px;">Extreme cold difference</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h2>Key Terms</h2>
+          <dl>
+            <dt style="font-weight:600;margin-top:12px;">Cold Locator</dt>
+            <dd style="margin-left:16px;">A free web application that compares your current temperature with real-time weather data from 145,000+ cities worldwide, showing only those that are currently colder.</dd>
+            <dt style="font-weight:600;margin-top:12px;">Temperature Delta</dt>
+            <dd style="margin-left:16px;">The difference between your location's temperature and a city's temperature. Only negative deltas (colder cities) are displayed.</dd>
+            <dt style="font-weight:600;margin-top:12px;">Open-Meteo API</dt>
+            <dd style="margin-left:16px;">The free weather data provider used by Cold Locator, offering real-time temperature data with no API key or sign-up required.</dd>
+          </dl>
+        </section>
+
+        <section>
+          <h2>Features</h2>
+          <ul>
+            <li>Real-time weather data from 145,000+ cities worldwide</li>
+            <li>Color-coded markers showing temperature difference at a glance</li>
+            <li>Toggle between °C and °F temperature units</li>
+            <li>GPU-rendered interactive map powered by MapLibre GL</li>
+            <li>Completely free — no sign-up, no API keys, no data collection</li>
+            <li>Embeddable via iframe with URL parameters for AI agents and websites</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Embed Cold Locator</h2>
+          <p>AI agents and websites can embed Cold Locator as an interactive widget. Use URL parameters to preset a location:</p>
+          <p><code>https://colder.itiszack.com/?city=London&amp;embed=1&amp;zoom=6</code></p>
+          <p>See the full integration guide at <a href="/llms.txt">/llms.txt</a></p>
+        </section>
+
+        <footer>
+          <h2>Summary</h2>
+          <p>Cold Locator is the fastest way to find places colder than your current location. It combines real-time weather data from the Open-Meteo API with a database of 145,000+ cities from GeoNames, rendered on a GPU-accelerated interactive map. Whether you're planning a trip to escape the heat, curious about global temperature differences, or building an AI integration — Cold Locator provides instant, visual answers with no sign-up required.</p>
+          <p style="margin-top:16px;font-size:0.9em;opacity:0.7;">This application requires JavaScript to run. Please enable JavaScript in your browser for the full interactive experience.</p>
+        </footer>
+      </article>
     </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
