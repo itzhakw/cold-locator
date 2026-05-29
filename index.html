@@ -9,18 +9,139 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/snowflake.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Find places colder than where you are right now — an interactive temperature map powered by real-time weather data." />
+    <meta name="description" content="Find places colder than where you are right now — an interactive temperature map powered by real-time weather data from 145,000+ cities worldwide." />
+    <meta name="theme-color" content="#0a0f1e" />
+    <meta name="robots" content="index, follow" />
     <title>Cold Locator — Find Colder Places Near You</title>
+
+    <link rel="canonical" href="https://colder.itiszack.com/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Cold Locator" />
+    <meta property="og:title" content="Cold Locator — Find Colder Places Near You" />
+    <meta property="og:description" content="Escape the heat. Discover chill. An interactive temperature map showing places colder than your location, powered by real-time weather data from 145,000+ cities." />
+    <meta property="og:url" content="https://colder.itiszack.com/" />
+    <meta property="og:image" content="https://colder.itiszack.com/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Cold Locator — Find Colder Places Near You" />
+    <meta name="twitter:description" content="Escape the heat. Discover chill. An interactive temperature map showing places colder than your location in real-time." />
+    <meta name="twitter:image" content="https://colder.itiszack.com/og-image.jpg" />
+
+    <link rel="llms" type="text/plain" href="/llms.txt" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://tiles.openfreemap.org" />
+    <link rel="preconnect" href="https://geocoding-api.open-meteo.com" />
+    <link rel="dns-prefetch" href="https://api.open-meteo.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Cold Locator",
+      "url": "https://colder.itiszack.com",
+      "description": "Find places colder than where you are right now — an interactive temperature map powered by real-time weather data from 145,000+ cities worldwide.",
+      "applicationCategory": "WeatherApplication",
+      "operatingSystem": "Any",
+      "browserRequirements": "Requires JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How does Cold Locator find colder places?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Cold Locator compares your current temperature with real-time weather data from over 145,000 cities worldwide using the Open-Meteo API. It displays cities currently colder than your location, color-coded by temperature difference: gold (1–3°C), cyan (3–8°C), blue (8–15°C), and deep blue (15°C+ colder)."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What cities does Cold Locator include?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Over 145,000 cities from the GeoNames dataset with populations over 1,000. At lower zoom levels only major cities (50,000+ population) appear. Zoom in to discover smaller cities."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Cold Locator free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, Cold Locator is completely free. It runs in your browser with no sign-up, no API keys, and no data collection required."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I embed Cold Locator on my website?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Use an iframe with URL parameters to embed Cold Locator with a preset location: https://colder.itiszack.com/?lat=51.5&lng=-0.1&zoom=7&embed=1. Supported parameters: lat, lng, zoom, city (with optional country like London,UK), unit (C/F), and embed (1 for minimal UI). See https://colder.itiszack.com/llms.txt for the full integration guide."
+          }
+        }
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "How to find places colder than your location",
+      "step": [
+        { "@type": "HowToStep", "text": "Open Cold Locator and allow location access, or search for your city." },
+        { "@type": "HowToStep", "text": "The app fetches your current temperature from real-time weather data." },
+        { "@type": "HowToStep", "text": "Cities colder than your location appear on the map as color-coded markers." },
+        { "@type": "HowToStep", "text": "Zoom in to discover smaller cities, or zoom out to see major cold spots worldwide." }
+      ]
+    }
+    </script>
   </head>
   <body>
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKRQDFG2"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <noscript>
+      <div style="max-width:600px;margin:40px auto;padding:20px;font-family:Inter,system-ui,sans-serif;color:#f0f4ff;background:#0a0f1e;">
+        <h1>Cold Locator — Find Colder Places Near You</h1>
+        <p>An interactive temperature map that finds places colder than where you are right now. Select your location, and the map instantly populates with cities that are currently colder — color-coded by how much colder they are.</p>
+        <h2>How It Works</h2>
+        <ol>
+          <li>Allow location access or search for your city</li>
+          <li>The app fetches your current temperature from real-time weather data</li>
+          <li>Cities colder than your location appear on the map as color-coded markers</li>
+          <li>Zoom in to discover smaller cities, or zoom out for major cold spots worldwide</li>
+        </ol>
+        <h2>Features</h2>
+        <ul>
+          <li>Real-time weather data from 145,000+ cities worldwide</li>
+          <li>Color-coded markers: gold (1–3°C colder), cyan (3–8°C), blue (8–15°C), deep blue (15°C+)</li>
+          <li>Toggle between °C and °F temperature units</li>
+          <li>GPU-rendered interactive map</li>
+          <li>Free to use — no sign-up required</li>
+          <li>Embeddable via iframe with URL parameters</li>
+        </ul>
+        <h2>Embed Cold Locator</h2>
+        <p>AI agents and websites can embed Cold Locator as an interactive widget. Use URL parameters to preset a location: <code>https://colder.itiszack.com/?city=London&embed=1&zoom=6</code></p>
+        <p>See the full integration guide at <a href="/llms.txt">/llms.txt</a></p>
+        <p>This application requires JavaScript to run. Please enable JavaScript in your browser.</p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -12,10 +12,12 @@ export default function SettingsPanel({ unit, onUnitChange, onClose }: Props) {
       <div
         className="settings-panel glass"
         id="settings-panel"
+        role="dialog"
+        aria-labelledby="settings-title"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="settings-header">
-          <h2 className="settings-title">Settings</h2>
+          <h2 className="settings-title" id="settings-title">Settings</h2>
           <button className="settings-close" onClick={onClose} id="settings-close-btn" aria-label="Close settings">✕</button>
         </div>
 

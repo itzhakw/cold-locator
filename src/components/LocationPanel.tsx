@@ -11,6 +11,7 @@ interface Props {
   error: string | null;
   onLocationSet: (loc: UserLocation, temp: number | null) => void;
   onError: (err: string) => void;
+  embed?: boolean;
 }
 
 type PanelState = "requesting" | "search" | "located" | "loading";
@@ -22,12 +23,15 @@ export default function LocationPanel({
   error,
   onLocationSet,
   onError,
+  embed = false,
 }: Props) {
   const [state, setState] = useState<PanelState>("requesting");
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<GeocodingResult[]>([]);
   const [searching, setSearching] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const listboxId = "city-suggestions";
 
   useEffect(() => {
     if (userLocation) {
@@ -79,6 +83,7 @@ export default function LocationPanel({
 
   const handleSearchInput = (q: string) => {
     setSearchQuery(q);
+    setActiveIndex(-1);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (q.length < 2) { setSuggestions([]); return; }
     debounceRef.current = setTimeout(async () => {
@@ -93,6 +98,7 @@ export default function LocationPanel({
     setState("loading");
     setSuggestions([]);
     setSearchQuery("");
+    setActiveIndex(-1);
     const weather = await fetchSingleWeather(r.lat, r.lng);
     (window as any).dataLayer = (window as any).dataLayer || [];
     (window as any).dataLayer.push({
@@ -119,13 +125,26 @@ export default function LocationPanel({
           {userTemp !== null && (
             <span className="location-temp">{formatTemp(userTemp, unit)}</span>
           )}
-          <button
-            className="change-location-btn"
-            onClick={() => setState("search")}
-            id="change-location-btn"
-          >
-            Change
-          </button>
+          {!embed && (
+            <button
+              className="change-location-btn"
+              onClick={() => setState("search")}
+              id="change-location-btn"
+            >
+              Change
+            </button>
+          )}
+          {embed && (
+            <a
+              href={`https://colder.itiszack.com/?lat=${userLocation.lat}&lng=${userLocation.lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="change-location-btn"
+              id="open-full-btn"
+            >
+              Open ↗
+            </a>
+          )}
         </div>
       </div>
     );
@@ -134,9 +153,11 @@ export default function LocationPanel({
   return (
     <div className="location-panel glass" id="location-panel">
       <div className="location-panel-inner">
-        <div className="app-logo">🌡️</div>
-        <h1 className="app-title">Cold Locator</h1>
-        <p className="app-subtitle">Find places colder than where you are</p>
+        <header>
+          <div className="app-logo">🌡️</div>
+          <h1 className="app-title">Cold Locator</h1>
+          <p className="app-subtitle">Find places colder than where you are</p>
+        </header>
 
         {state === "requesting" && (
           <div className="location-status">
@@ -153,7 +174,7 @@ export default function LocationPanel({
         )}
 
         {(state === "search" || state === "requesting") && (
-          <div className="search-container">
+          <search className="search-container">
             {error && <p className="location-error">{error}</p>}
             <div className="search-input-wrap">
               <input
@@ -164,11 +185,16 @@ export default function LocationPanel({
                 onChange={(e) => handleSearchInput(e.target.value)}
                 className="search-input"
                 autoComplete="off"
+                role="combobox"
+                aria-expanded={suggestions.length > 0}
+                aria-controls={listboxId}
+                aria-activedescendant={activeIndex >= 0 ? `suggestion-${activeIndex}` : undefined}
+                aria-autocomplete="list"
               />
               {searching && <div className="spinner search-spinner" />}
             </div>
             {suggestions.length > 0 && (
-              <ul className="suggestions-list" role="listbox">
+              <ul className="suggestions-list" role="listbox" id={listboxId} aria-live="polite">
                 {suggestions.map((r, i) => (
                   <li
                     key={i}
@@ -176,6 +202,7 @@ export default function LocationPanel({
                     className="suggestion-item"
                     onClick={() => handleSelectCity(r)}
                     id={`suggestion-${i}`}
+                    aria-selected={i === activeIndex}
                   >
                     <span className="suggestion-name">{r.name}</span>
                     <span className="suggestion-meta">
@@ -185,7 +212,7 @@ export default function LocationPanel({
                 ))}
               </ul>
             )}
-          </div>
+          </search>
         )}
       </div>
     </div>

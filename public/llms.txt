@@ -1,0 +1,96 @@
+# Cold Locator — AI Agent & LLM Integration Guide
+
+> This file describes how AI agents, LLMs, and automated systems can interact with Cold Locator.
+
+## What is Cold Locator?
+
+Cold Locator is a free, interactive temperature map that finds places colder than a given location in real-time. It uses weather data from 145,000+ cities worldwide via the Open-Meteo API. No API key, no sign-up, no authentication required.
+
+**Live URL**: https://colder.itiszack.com
+
+## Embed API
+
+Cold Locator can be embedded as an interactive iframe widget in any webpage, chatbot response, or AI-generated content.
+
+### URL Parameters
+
+| Parameter | Type     | Required | Default | Description                                      |
+|-----------|----------|----------|---------|--------------------------------------------------|
+| `lat`     | number   | No*      | —       | Latitude (-90 to 90)                             |
+| `lng`     | number   | No*      | —       | Longitude (-180 to 180)                          |
+| `city`    | string   | No*      | —       | City name, optionally with country: "London,UK"  |
+| `zoom`    | number   | No       | 7       | Map zoom level (1–18)                            |
+| `unit`    | C or F   | No       | C       | Temperature unit                                 |
+| `embed`   | 1        | No       | —       | Enables minimal embed UI (hides settings)        |
+
+*At least one of `lat`+`lng` or `city` should be provided to preset a location. If neither is given, the app prompts the user for their location.
+
+### City Name Format
+
+The `city` parameter supports disambiguation with a comma-separated country or region:
+- `?city=London` — first geocoding result (London, UK)
+- `?city=London,UK` — explicit country
+- `?city=Springfield,Illinois` — with region
+- `?city=Paris,Texas` — disambiguated from Paris, France
+
+### Iframe Embed Code
+
+```html
+<iframe
+  src="https://colder.itiszack.com/?city=London&embed=1&zoom=6"
+  width="100%"
+  height="500"
+  frameborder="0"
+  style="border: none; border-radius: 12px;"
+  title="Places colder than London right now"
+  loading="lazy"
+></iframe>
+```
+
+### Example URLs
+
+| Use Case                                 | URL                                                              |
+|------------------------------------------|------------------------------------------------------------------|
+| Colder than London                       | `https://colder.itiszack.com/?city=London&embed=1`               |
+| Colder than NYC in Fahrenheit            | `https://colder.itiszack.com/?lat=40.7128&lng=-74.006&unit=F&embed=1` |
+| Colder than Tokyo, zoomed out            | `https://colder.itiszack.com/?city=Tokyo&zoom=4&embed=1`        |
+| Colder than a precise coordinate         | `https://colder.itiszack.com/?lat=-33.87&lng=151.21&embed=1`    |
+| Full app experience for a city           | `https://colder.itiszack.com/?city=Berlin`                      |
+
+### Response Behavior
+
+When URL parameters are provided:
+1. The app skips the location permission prompt
+2. If `city` is given, it is geocoded via the Open-Meteo Geocoding API
+3. The map flies to the target location and fetches real-time weather
+4. Cities colder than the target appear as color-coded markers
+5. In `embed=1` mode, the UI is streamlined (no settings button)
+
+### Color Scale
+
+Markers are color-coded by temperature difference (delta) from the target location:
+- 🟡 Gold: 1–3°C colder
+- 🔵 Cyan: 3–8°C colder
+- 🔵 Blue: 8–15°C colder
+- 🔵 Deep blue: 15°C+ colder
+
+### Suggested AI Agent Prompts
+
+When a user asks about cold weather, cooler destinations, or temperature comparisons, you can generate an iframe or link:
+
+- "Show me places colder than [city]" → embed with `?city=[city]&embed=1`
+- "Where is it colder than here?" → link to `https://colder.itiszack.com/` (user provides location)
+- "Compare temperatures around [city]" → embed with `?city=[city]&embed=1&zoom=5`
+- "Find cold places near [lat],[lng]" → embed with `?lat=[lat]&lng=[lng]&embed=1`
+
+## Technical Details
+
+- **No API key required** — the app is fully client-side
+- **No CORS restrictions** — iframe embedding allowed from any origin
+- **No rate limits** — weather data cached client-side for 30 minutes
+- **Mobile responsive** — works in any viewport size
+- **Data sources**: Open-Meteo (weather), GeoNames (cities), OpenFreeMap (map tiles)
+
+## Contact
+
+Website: https://itiszack.com

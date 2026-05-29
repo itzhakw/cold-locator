@@ -75,6 +75,38 @@ npx wrangler dev     # Local Cloudflare preview
 - Open-Meteo is free for non-commercial use only
 - OpenFreeMap tiles: no API key, no rate limit, CC-BY via OSM
 
+## SEO & AIO
+- **Structured data**: Three JSON-LD blocks in `index.html` — `WebApplication`, `FAQPage`, `HowTo`
+- **Open Graph + Twitter Cards**: Meta tags for social sharing with branded OG image (`public/og-image.jpg`)
+- **Canonical URL**: `https://colder.itiszack.com/`
+- **robots.txt + sitemap.xml**: Static files in `public/`
+- **llms.txt**: AI agent integration guide at `public/llms.txt`, linked via `<link rel="llms">` in `<head>`
+- **noscript fallback**: Crawlable text content (description, how-it-works, features) rendered for JS-disabled crawlers
+- **No visible UI changes**: All SEO content is invisible to regular users
+
+## Embed API (AI Agent Integration)
+The app supports URL query parameters for deep-linking and iframe embedding.
+
+### URL Parameters
+| Parameter | Type     | Default | Description                                      |
+|-----------|----------|---------|--------------------------------------------------|
+| `lat`     | number   | —       | Latitude (-90 to 90)                             |
+| `lng`     | number   | —       | Longitude (-180 to 180)                          |
+| `city`    | string   | —       | City name, optionally with country: "London,UK"  |
+| `zoom`    | number   | 7       | Map zoom level (1–18)                            |
+| `unit`    | C or F   | C       | Temperature unit                                 |
+| `embed`   | 1        | —       | Minimal embed UI (hides settings button)         |
+
+### Embed Behavior
+- `embed=1`: Hides settings button, shows "Open ↗" link instead of "Change" button in located panel
+- `city` parameter: Geocoded via Open-Meteo Geocoding API on load, supports "City,Country" format
+- `lat`+`lng`: Direct coordinate positioning, skips geocoding
+- No `X-Frame-Options` header — any domain can iframe the app
+
+### Key Files
+- `src/lib/urlParams.ts` — URL parameter parser and validator
+- `public/llms.txt` — AI agent integration documentation
+
 ## Analytics & Tracking
 The application uses Google Tag Manager (GTM) and Google Analytics 4 (GA4) for event tracking. 
 The GTM container ID is `GTM-PKRQDFG2`.

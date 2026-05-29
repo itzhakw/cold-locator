@@ -27,18 +27,21 @@ interface Props {
   userTemp: number | null;
   unit: TempUnit;
   onUserTempUpdate: (temp: number) => void;
+  initialZoom?: number;
 }
 
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
 const DEBOUNCE_MS = 300;
-const FLYTO_ZOOM = 7;
+const DEFAULT_FLYTO_ZOOM = 7;
 
 export default function MapView({
   userLocation,
   userTemp,
   unit,
   onUserTempUpdate,
+  initialZoom,
 }: Props) {
+  const FLYTO_ZOOM = initialZoom ?? DEFAULT_FLYTO_ZOOM;
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<Map<number, maplibregl.Marker>>(new Map());
@@ -285,5 +288,13 @@ export default function MapView({
     refreshMarkerLabels();
   }, [userTemp, unit, refreshMarkerLabels]);
 
-  return <div ref={containerRef} className="map-container" id="map" />;
+  return (
+    <div
+      ref={containerRef}
+      className="map-container"
+      id="map"
+      role="application"
+      aria-label="Interactive temperature map showing places colder than your location"
+    />
+  );
 }
