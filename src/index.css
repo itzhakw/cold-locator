@@ -1,4 +1,4 @@
-@import "tailwindcss";
+
 @import "maplibre-gl/dist/maplibre-gl.css";
 
 :root {
@@ -98,7 +98,10 @@ body,
   border-radius: var(--panel-radius);
   max-width: 420px;
   width: calc(100% - 40px);
-  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              background 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              border-radius 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              padding 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .location-panel.located {
@@ -487,6 +490,8 @@ body,
   cursor: pointer;
   animation: markerFadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   transition: transform 0.15s ease;
+  contain: layout style paint;
+  will-change: transform;
 }
 
 .city-marker:hover {
@@ -567,6 +572,7 @@ body,
 .user-pin {
   position: relative;
   animation: markerFadeIn 0.4s ease;
+  contain: layout style paint;
 }
 
 .user-pin-pulse {

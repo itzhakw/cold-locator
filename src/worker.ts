@@ -12,6 +12,10 @@ export default {
       headers.set("Cache-Control", "public, max-age=86400, immutable");
     }
 
+    if (url.pathname.startsWith("/assets/")) {
+      headers.set("Cache-Control", "public, max-age=31536000, immutable");
+    }
+
     return new Response("Not found", { status: 404, headers });
   },
 } satisfies ExportedHandler;
