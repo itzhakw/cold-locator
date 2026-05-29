@@ -242,3 +242,78 @@ export function prefetchZoomTransition(
     keys.forEach((k) => fetchTile(k, ""));
   });
 }
+
+const ESCALATION_TILE_CAP = 20;
+
+function filterCitiesInBbox(cities: City[], bbox: BBox, cap: number): City[] {
+  return cities
+    .filter(
+      (c) =>
+        c.lat >= bbox.south &&
+        c.lat <= bbox.north &&
+        c.lng >= bbox.west &&
+        c.lng <= bbox.east
+    )
+    .sort((a, b) => b.population - a.population)
+    .slice(0, cap);
+}
+
+async function fetchTierCities(
+  bbox: BBox,
+  suffix: string,
+  manifest: Set<string> | null,
+  cap: number
+): Promise<City[]> {
+  if (!manifest || manifest.size === 0) return [];
+  await loadManifests();
+  const keys = bboxToTileKeys(bbox)
+    .filter((k) => manifest.has(k))
+    .slice(0, ESCALATION_TILE_CAP);
+  if (keys.length === 0) return [];
+  const tiles = await Promise.all(keys.map((k) => fetchTile(k, suffix)));
+  return filterCitiesInBbox(tiles.flat(), bbox, cap);
+}
+
+export async function getCitiesInViewEscalated(
+  bbox: BBox,
+  zoom: number,
+  maxMarkersCap: number
+): Promise<{ cities: City[]; escalated: boolean }> {
+  const normal = await getCitiesInView(bbox, zoom);
+  if (normal.length > 0) return { cities: normal, escalated: false };
+
+  await loadManifests();
+  const floorZoom = Math.floor(zoom);
+
+  if (floorZoom < 4) {
+    const majorCities = await fetchTierCities(
+      bbox, "_major", manifestMajor, maxMarkersCap
+    );
+    if (majorCities.length > 0) return { cities: majorCities, escalated: true };
+
+    const fullCities = await fetchTierCities(
+      bbox, "", manifestFull, maxMarkersCap
+    );
+    if (fullCities.length > 0) return { cities: fullCities, escalated: true };
+  }
+
+  if (floorZoom >= 4 && floorZoom <= MAJOR_ZOOM_MAX) {
+    const fullCities = await fetchTierCities(
+      bbox, "", manifestFull, maxMarkersCap
+    );
+    if (fullCities.length > 0) return { cities: fullCities, escalated: true };
+  }
+
+  if (floorZoom >= 10) {
+    const { suffix, manifest } = resolveTier(zoom);
+    const keys = bboxToTileKeys(bbox)
+      .filter((k) => manifest.has(k))
+      .slice(0, ESCALATION_TILE_CAP);
+    const tiles = await Promise.all(keys.map((k) => fetchTile(k, suffix)));
+    const relaxed = filterCitiesInBbox(tiles.flat(), bbox, maxMarkersCap);
+    if (relaxed.length > 0) return { cities: relaxed, escalated: true };
+  }
+
+  return { cities: [], escalated: false };
+}
+

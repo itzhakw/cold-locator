@@ -36,6 +36,14 @@ See `src/lib/cityTiles.ts` `ZOOM_THRESHOLDS` array. Higher zoom = lower min popu
 ### Temperature Delta Logic
 A city is shown only if `cityTemp < userTemp`. Delta = `cityTemp - userTemp` (always negative for shown cities). Color-coded by delta magnitude.
 
+### Adaptive Cold Discovery (Tier Escalation)
+When the normal zoom-based pass finds zero cold cities, the system cascades through deeper data tiers without changing the user's zoom:
+- Zoom < 4 (global only) → try major tiles → if still nothing, try full tiles
+- Zoom 4–9 (major tiles) → try full tiles
+- Zoom ≥ 10 (full tiles) → relax minPopulation to 1K floor
+
+Per-step caps: max 20 tiles fetched, max 50 cities returned. Cascade is uncapped — keeps going until cold results found or all tiers exhausted. Implemented in `getCitiesInViewEscalated()` in `cityTiles.ts`.
+
 ### Map
 - **Library**: MapLibre GL JS v4 (GPU vector tiles)
 - **Tiles**: OpenFreeMap Liberty style

@@ -22,6 +22,11 @@ export default function App() {
   const handleUnitChange = useCallback((u: TempUnit) => {
     setUnit(u);
     localStorage.setItem("tempUnit", u);
+    (window as any).dataLayer = (window as any).dataLayer || [];
+    (window as any).dataLayer.push({
+      event: "change_unit",
+      unit: u
+    });
   }, []);
 
   const handleLocationSet = useCallback(
@@ -47,7 +52,18 @@ export default function App() {
       <button
         id="settings-btn"
         className="settings-btn"
-        onClick={() => setShowSettings((s) => !s)}
+        onClick={() => {
+          setShowSettings((s) => {
+            const next = !s;
+            if (next) {
+              (window as any).dataLayer = (window as any).dataLayer || [];
+              (window as any).dataLayer.push({
+                event: "open_settings"
+              });
+            }
+            return next;
+          });
+        }}
         aria-label="Open settings"
         title="Settings"
       >

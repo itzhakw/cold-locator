@@ -5,6 +5,7 @@ import type { UserLocation } from "../App";
 import type { TempUnit } from "../lib/mapUtils";
 import {
   getCitiesInView,
+  getCitiesInViewEscalated,
   prefetchTilesForBbox,
   prefetchAdjacentTiles,
   prefetchZoomTransition,
@@ -42,6 +43,7 @@ export default function MapView({
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<Map<number, maplibregl.Marker>>(new Map());
   const userMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const escalationLoaderRef = useRef<maplibregl.Marker | null>(null);
   const unitRef = useRef(unit);
   const userTempRef = useRef(userTemp);
 
@@ -102,38 +104,89 @@ export default function MapView({
         }
       }
 
+      const addColdMarkers = (cities: City[], weatherMap: Map<number, import("../lib/weather").WeatherData>): number => {
+        let added = 0;
+        for (const city of cities) {
+          if (markersRef.current.has(city.id)) continue;
+          const weather = weatherMap.get(city.id);
+          if (!weather) continue;
+
+          const uTemp = userTempRef.current ?? 0;
+          const delta = weather.temperature - uTemp;
+          if (delta > -1.0) continue;
+
+          const el = document.createElement("div");
+          el.innerHTML = renderCityMarker(city, weather, delta, unitRef.current);
+          el.addEventListener("click", () => {
+            (window as any).dataLayer = (window as any).dataLayer || [];
+            (window as any).dataLayer.push({
+              event: "click_cold_city",
+              city_id: city.id,
+              city_name: city.name,
+              country: city.country,
+              temperature: weather.temperature,
+              delta: delta
+            });
+          });
+          const marker = new maplibregl.Marker({
+            element: el,
+            anchor: "bottom",
+          })
+            .setLngLat([city.lng, city.lat])
+            .addTo(map);
+          markersRef.current.set(city.id, marker);
+          cityPositionsRef.current.set(city.id, {
+            lat: city.lat,
+            lng: city.lng,
+          });
+          cityDataRef.current.set(city.id, { city, weather });
+          added++;
+        }
+        return added;
+      };
+
+      let coldFound = 0;
+
       const cities = await getCitiesInView(bbox, zoom);
-      if (cities.length === 0) return;
-
       const toFetch = cities.filter((c) => !markersRef.current.has(c.id));
-      if (toFetch.length === 0) return;
+      if (toFetch.length > 0) {
+        const weatherMap = await fetchWeatherBatch(
+          toFetch.map((c) => ({ id: c.id, lat: c.lat, lng: c.lng }))
+        );
+        coldFound = addColdMarkers(toFetch, weatherMap);
+      }
 
-      const weatherMap = await fetchWeatherBatch(
-        toFetch.map((c) => ({ id: c.id, lat: c.lat, lng: c.lng }))
-      );
-
-      for (const city of toFetch) {
-        const weather = weatherMap.get(city.id);
-        if (!weather) continue;
-
-        const uTemp = userTempRef.current ?? 0;
-        const delta = weather.temperature - uTemp;
-        if (delta > -1.0) continue;
-
-        const el = document.createElement("div");
-        el.innerHTML = renderCityMarker(city, weather, delta, unitRef.current);
-        const marker = new maplibregl.Marker({
-          element: el,
-          anchor: "bottom",
+      if (coldFound === 0) {
+        const center = map.getCenter();
+        const loaderEl = document.createElement("div");
+        loaderEl.className = "escalation-loader";
+        loaderEl.innerHTML = '<div class="escalation-loader-ring"></div>';
+        escalationLoaderRef.current?.remove();
+        escalationLoaderRef.current = new maplibregl.Marker({
+          element: loaderEl,
+          anchor: "center",
         })
-          .setLngLat([city.lng, city.lat])
+          .setLngLat([center.lng, center.lat])
           .addTo(map);
-        markersRef.current.set(city.id, marker);
-        cityPositionsRef.current.set(city.id, {
-          lat: city.lat,
-          lng: city.lng,
-        });
-        cityDataRef.current.set(city.id, { city, weather });
+
+        try {
+          const { cities: escalatedCities, escalated } =
+            await getCitiesInViewEscalated(bbox, zoom, 50);
+          if (escalated && escalatedCities.length > 0) {
+            const escToFetch = escalatedCities.filter(
+              (c) => !markersRef.current.has(c.id)
+            );
+            if (escToFetch.length > 0) {
+              const weatherMap = await fetchWeatherBatch(
+                escToFetch.map((c) => ({ id: c.id, lat: c.lat, lng: c.lng }))
+              );
+              addColdMarkers(escToFetch, weatherMap);
+            }
+          }
+        } finally {
+          escalationLoaderRef.current?.remove();
+          escalationLoaderRef.current = null;
+        }
       }
 
       prefetchAdjacentTiles(bbox, zoom);

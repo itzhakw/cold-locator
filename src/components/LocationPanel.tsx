@@ -36,6 +36,12 @@ export default function LocationPanel({
     }
     setState("requesting");
     if (!navigator.geolocation) {
+      (window as any).dataLayer = (window as any).dataLayer || [];
+      (window as any).dataLayer.push({
+        event: "detect_location",
+        status: "failed",
+        error_message: "Geolocation not supported by your browser."
+      });
       setState("search");
       onError("Geolocation not supported by your browser.");
       return;
@@ -45,6 +51,12 @@ export default function LocationPanel({
         setState("loading");
         const { latitude: lat, longitude: lng } = pos.coords;
         const weather = await fetchSingleWeather(lat, lng);
+        (window as any).dataLayer = (window as any).dataLayer || [];
+        (window as any).dataLayer.push({
+          event: "detect_location",
+          status: "success",
+          location_label: "Your location"
+        });
         onLocationSet(
           { lat, lng, label: "Your location" },
           weather?.temperature ?? null
@@ -52,6 +64,12 @@ export default function LocationPanel({
         setState("located");
       },
       () => {
+        (window as any).dataLayer = (window as any).dataLayer || [];
+        (window as any).dataLayer.push({
+          event: "detect_location",
+          status: "failed",
+          error_message: "Location access denied. Search for your city below."
+        });
         setState("search");
         onError("Location access denied. Search for your city below.");
       },
@@ -76,11 +94,17 @@ export default function LocationPanel({
     setSuggestions([]);
     setSearchQuery("");
     const weather = await fetchSingleWeather(r.lat, r.lng);
+    (window as any).dataLayer = (window as any).dataLayer || [];
+    (window as any).dataLayer.push({
+      event: "select_city",
+      city_name: r.name,
+      country: r.country
+    });
     onLocationSet(
       {
         lat: r.lat,
         lng: r.lng,
-        label: r.admin1 ? `${r.name}, ${r.admin1}` : `${r.name}, ${r.country}`,
+        label: r.admin1 ? `${r.name}, ${r.admin1}` : `${r.name}, ${r.country}`
       },
       weather?.temperature ?? null
     );
