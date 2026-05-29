@@ -49,9 +49,11 @@ export default function MapView({
   const escalationLoaderRef = useRef<maplibregl.Marker | null>(null);
   const unitRef = useRef(unit);
   const userTempRef = useRef(userTemp);
+  const userLocationRef = useRef(userLocation);
 
   unitRef.current = unit;
   userTempRef.current = userTemp;
+  userLocationRef.current = userLocation;
 
   const cityPositionsRef = useRef<Map<number, { lat: number; lng: number }>>(
     new Map()
@@ -130,6 +132,11 @@ export default function MapView({
               temperature: weather.temperature,
               delta: delta
             });
+            if (userLocationRef.current) {
+              const { lat: uLat, lng: uLng } = userLocationRef.current;
+              const url = `https://www.google.com/maps/dir/?api=1&origin=${uLat},${uLng}&destination=${city.lat},${city.lng}`;
+              window.open(url, "_blank", "noopener");
+            }
           });
           const marker = new maplibregl.Marker({
             element: el,
