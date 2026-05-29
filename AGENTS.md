@@ -74,6 +74,7 @@ npx wrangler dev     # Local Cloudflare preview
 - Temperature unit preference stored in `localStorage` key `tempUnit`
 - Open-Meteo is free for non-commercial use only
 - OpenFreeMap tiles: no API key, no rate limit, CC-BY via OSM
+- On mobile viewports (≤ 480px) in standard mode, the located panel width is set to `calc(100% - 80px)` and offset to the left (`left: 12px; transform: none`) to prevent the settings button from overlapping the "Change" button. It remains full width in embed mode.
 
 ## SEO & AIO
 - **Structured data**: Three JSON-LD blocks in `index.html` — `WebApplication`, `FAQPage`, `HowTo`
