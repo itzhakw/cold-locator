@@ -74,3 +74,24 @@ npx wrangler dev     # Local Cloudflare preview
 - Temperature unit preference stored in `localStorage` key `tempUnit`
 - Open-Meteo is free for non-commercial use only
 - OpenFreeMap tiles: no API key, no rate limit, CC-BY via OSM
+
+## Analytics & Tracking
+The application uses Google Tag Manager (GTM) and Google Analytics 4 (GA4) for event tracking. 
+The GTM container ID is `GTM-PKRQDFG2`.
+
+### Implemented Custom Events
+Events are pushed to the `dataLayer` via the `window.dataLayer` object.
+1. **`detect_location`**: Fired when the user clicks the "Use my location" button.
+   - Parameters: `status` ('success' | 'error'), `location_label` (string, e.g., "New York, US"), `error_message` (string, if applicable)
+2. **`select_city`**: Fired when the user selects a city from the search dropdown.
+   - Parameters: `city_name`, `country`
+3. **`open_settings`**: Fired when the user toggles the settings panel open.
+4. **`change_unit`**: Fired when the user changes the temperature unit preference.
+   - Parameters: `unit` ('C' | 'F')
+5. **`click_cold_city`**: Fired when the user clicks on a cold destination city marker on the map.
+   - Parameters: `city_id`, `city_name`, `country`, `temperature`, `delta`
+
+### GTM Configuration
+- The workspace includes Data Layer Variables for all the parameters listed above.
+- Triggers are set up for each custom event name.
+- GA4 Event Tags are configured to pass these parameters to the connected GA4 Measurement ID.
