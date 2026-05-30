@@ -1,5 +1,5 @@
 import type { TempUnit } from "../lib/mapUtils";
-import type { ViewMode } from "../App";
+import type { ViewMode, MapStyleMode } from "../App";
 import ApiStatus from "./ApiStatus";
 
 interface Props {
@@ -8,9 +8,11 @@ interface Props {
   onClose: () => void;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
+  mapStyle: MapStyleMode;
+  onMapStyleChange: (mode: MapStyleMode) => void;
 }
 
-export default function SettingsPanel({ unit, onUnitChange, onClose, viewMode, onViewModeChange }: Props) {
+export default function SettingsPanel({ unit, onUnitChange, onClose, viewMode, onViewModeChange, mapStyle, onMapStyleChange }: Props) {
   return (
     <div className="settings-overlay" onClick={onClose}>
       <div
@@ -43,6 +45,26 @@ export default function SettingsPanel({ unit, onUnitChange, onClose, viewMode, o
               style={{ flex: 1, padding: "8px", borderRadius: "10px", textAlign: "center" }}
             >
               7 Days
+            </button>
+          </div>
+
+          <label className="settings-label">Map Layer</label>
+          <div className="mode-toggle" id="map-style-toggle" style={{ padding: "4px", marginBottom: "16px", background: "rgba(255, 255, 255, 0.04)" }}>
+            <button
+              className={`mode-btn ${mapStyle === "standard" ? "active" : ""}`}
+              id="style-standard"
+              onClick={() => onMapStyleChange("standard")}
+              style={{ flex: 1, padding: "8px", borderRadius: "10px", textAlign: "center" }}
+            >
+              Standard
+            </button>
+            <button
+              className={`mode-btn ${mapStyle === "satellite" ? "active" : ""}`}
+              id="style-satellite"
+              onClick={() => onMapStyleChange("satellite")}
+              style={{ flex: 1, padding: "8px", borderRadius: "10px", textAlign: "center" }}
+            >
+              HD Satellite
             </button>
           </div>
           

@@ -8,6 +8,7 @@ import { fetchSingleWeather } from "./lib/weather";
 import { parseUrlParams, hasLocationParams, type EmbedConfig } from "./lib/urlParams";
 
 export type ViewMode = "now" | "forecast";
+export type MapStyleMode = "standard" | "satellite";
 
 export interface UserLocation {
   lat: number;
@@ -21,6 +22,9 @@ export default function App() {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [userTemp, setUserTemp] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(embedConfig.mode || "now");
+  const [mapStyle, setMapStyle] = useState<MapStyleMode>(() => {
+    return (localStorage.getItem("mapStyle") as MapStyleMode) || "standard";
+  });
   const [unit, setUnit] = useState<TempUnit>(() => {
     if (embedConfig.unit) return embedConfig.unit;
     return (localStorage.getItem("tempUnit") as TempUnit) || "C";
@@ -39,6 +43,11 @@ export default function App() {
       event: "change_unit",
       unit: u
     });
+  }, []);
+
+  const handleMapStyleChange = useCallback((m: MapStyleMode) => {
+    setMapStyle(m);
+    localStorage.setItem("mapStyle", m);
   }, []);
 
   const handleLocationSet = useCallback(
@@ -136,6 +145,8 @@ export default function App() {
           onClose={() => setShowSettings(false)}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
+          mapStyle={mapStyle}
+          onMapStyleChange={handleMapStyleChange}
         />
       )}
 
@@ -146,6 +157,7 @@ export default function App() {
         onUserTempUpdate={setUserTemp}
         initialZoom={embedConfig.zoom}
         viewMode={viewMode}
+        mapStyle={mapStyle}
       />
     </main>
   );

@@ -25,7 +25,7 @@ import { fetchAlerts, citiesInAlertZones, type WeatherAlert } from "../lib/alert
 import { debounce } from "../lib/mapUtils";
 import { renderCityMarker, renderForecastMarker } from "./CityMarker";
 import { renderUserPin } from "./UserPin";
-import type { ViewMode } from "../App";
+import type { ViewMode, MapStyleMode } from "../App";
 
 interface Props {
   userLocation: UserLocation | null;
@@ -34,6 +34,7 @@ interface Props {
   onUserTempUpdate: (temp: number) => void;
   initialZoom?: number;
   viewMode: ViewMode;
+  mapStyle: MapStyleMode;
 }
 
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
@@ -47,6 +48,7 @@ export default function MapView({
   onUserTempUpdate,
   initialZoom,
   viewMode,
+  mapStyle,
 }: Props) {
   const FLYTO_ZOOM = initialZoom ?? DEFAULT_FLYTO_ZOOM;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -301,7 +303,49 @@ export default function MapView({
 
     map.on("moveend", () => debouncedUpdate(map));
     map.on("zoomend", () => debouncedUpdate(map));
-    map.on("load", () => debouncedUpdate(map));
+    map.on("load", () => {
+      // Add NASA GIBS satellite raster layers
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+      map.addSource('nasa-gibs-yesterday', {
+        type: 'raster',
+        tiles: [
+          `https://gibs-a.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${yesterday}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`,
+          `https://gibs-b.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${yesterday}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`,
+          `https://gibs-c.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${yesterday}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`
+        ],
+        tileSize: 256,
+        maxzoom: 9
+      });
+
+      // Insert satellite layers right after background
+      const styleLayers = map.getStyle().layers;
+      let insertBeforeId;
+      if (styleLayers && styleLayers.length > 1) {
+        insertBeforeId = styleLayers[1].id;
+      }
+
+      const isSat = mapStyle === "satellite";
+
+      map.addLayer({
+        id: 'nasa-layer-yesterday',
+        type: 'raster',
+        source: 'nasa-gibs-yesterday',
+        layout: { visibility: isSat ? 'visible' : 'none' }
+      }, insertBeforeId);
+
+      if (isSat && styleLayers) {
+        for (const layer of styleLayers) {
+          if (layer.id.includes("nasa-layer")) continue;
+          const shouldHideInSat = layer.type === "background" || layer.type === "fill" || layer.id === "natural_earth";
+          if (shouldHideInSat) {
+            map.setLayoutProperty(layer.id, "visibility", "none");
+          }
+        }
+      }
+
+      debouncedUpdate(map);
+    });
 
     mapRef.current = map;
 
@@ -406,6 +450,36 @@ export default function MapView({
   useEffect(() => {
     refreshMarkerLabels();
   }, [userTemp, unit, refreshMarkerLabels]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    
+    const applyMapStyle = () => {
+      const isSat = mapStyle === "satellite";
+      
+      if (map.getLayer("nasa-layer-yesterday")) {
+        map.setLayoutProperty("nasa-layer-yesterday", "visibility", isSat ? "visible" : "none");
+      }
+      
+      const layers = map.getStyle().layers;
+      if (layers) {
+        for (const layer of layers) {
+          if (layer.id.includes("nasa-layer")) continue;
+          const shouldHideInSat = layer.type === "background" || layer.type === "fill" || layer.id === "natural_earth";
+          if (shouldHideInSat) {
+            map.setLayoutProperty(layer.id, "visibility", isSat ? "none" : "visible");
+          }
+        }
+      }
+    };
+
+    if (map.isStyleLoaded()) {
+      applyMapStyle();
+    } else {
+      map.once("styledata", applyMapStyle);
+    }
+  }, [mapStyle]);
 
   return (
     <div
