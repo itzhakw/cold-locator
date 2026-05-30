@@ -32,7 +32,7 @@ export default function ApiStatus() {
         if (workerRes?.ok) {
           workerOk = "ok";
           try {
-            const data = await workerRes.json();
+            const data = await workerRes.json() as any;
             nwsOk = data.nws;
           } catch (e) {
             // parsing error

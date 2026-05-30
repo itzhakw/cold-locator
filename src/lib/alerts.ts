@@ -22,7 +22,7 @@ export async function fetchAlerts(): Promise<WeatherAlert[]> {
     const res = await fetch("/api/alerts");
     if (!res.ok) return [];
 
-    const raw = await res.json();
+    const raw = await res.json() as any;
     if (!raw.features) return [];
 
     const alerts: WeatherAlert[] = [];
