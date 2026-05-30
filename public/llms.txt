@@ -4,7 +4,7 @@
 
 ## What is Cold Locator?
 
-Cold Locator is a free, interactive temperature map that finds places colder than a given location in real-time. It uses weather data from 145,000+ cities worldwide via the Open-Meteo API. No API key, no sign-up, no authentication required.
+Cold Locator is a free, interactive temperature map that finds places colder than a given location. It features two modes: "Now" for real-time temperatures, and "7-Day Forecast" for upcoming maximum temperatures and severe weather tracking (including US NWS alerts). It uses weather data from 145,000+ cities worldwide via the Open-Meteo API. No API key, no sign-up, no authentication required.
 
 **Live URL**: https://colder.itiszack.com
 
@@ -14,14 +14,16 @@ Cold Locator can be embedded as an interactive iframe widget in any webpage, cha
 
 ### URL Parameters
 
-| Parameter | Type     | Required | Default | Description                                      |
-|-----------|----------|----------|---------|--------------------------------------------------|
-| `lat`     | number   | No*      | —       | Latitude (-90 to 90)                             |
-| `lng`     | number   | No*      | —       | Longitude (-180 to 180)                          |
-| `city`    | string   | No*      | —       | City name, optionally with country: "London,UK"  |
-| `zoom`    | number   | No       | 7       | Map zoom level (1–18)                            |
-| `unit`    | C or F   | No       | C       | Temperature unit                                 |
-| `embed`   | 1        | No       | —       | Enables minimal embed UI (hides settings)        |
+| Parameter  | Type           | Required | Default  | Description                                      |
+|------------|----------------|----------|----------|--------------------------------------------------|
+| `lat`      | number         | No*      | —        | Latitude (-90 to 90)                             |
+| `lng`      | number         | No*      | —        | Longitude (-180 to 180)                          |
+| `city`     | string         | No*      | —        | City name, optionally with country: "London,UK"  |
+| `zoom`     | number         | No       | 7        | Map zoom level (1–18)                            |
+| `unit`     | C or F         | No       | C        | Temperature unit                                 |
+| `viewMode` | now / forecast | No       | now      | "now" for real-time, "forecast" for 7-day max    |
+| `mapStyle` | standard / satellite| No  | standard | "standard" for vector map, "satellite" for NASA HD|
+| `embed`    | 1              | No       | —        | Enables minimal embed UI (hides settings)        |
 
 *At least one of `lat`+`lng` or `city` should be provided to preset a location. If neither is given, the app prompts the user for their location.
 
@@ -80,8 +82,8 @@ When a user asks about cold weather, cooler destinations, or temperature compari
 
 - "Show me places colder than [city]" → embed with `?city=[city]&embed=1`
 - "Where is it colder than here?" → link to `https://colder.itiszack.com/` (user provides location)
-- "Compare temperatures around [city]" → embed with `?city=[city]&embed=1&zoom=5`
-- "Find cold places near [lat],[lng]" → embed with `?lat=[lat]&lng=[lng]&embed=1`
+- "What's the 7-day cold forecast for [city]?" → embed with `?city=[city]&viewMode=forecast&embed=1`
+- "Show me a satellite view of cold places near [lat],[lng]" → embed with `?lat=[lat]&lng=[lng]&mapStyle=satellite&embed=1`
 
 ## Technical Details
 

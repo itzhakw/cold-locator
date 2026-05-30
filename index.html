@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/snowflake.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Find places colder than where you are right now — an interactive temperature map powered by real-time weather data from 145,000+ cities worldwide." />
+    <meta name="description" content="Find places colder than where you are right now — an interactive temperature map with real-time weather, 7-day forecasts, and a NASA HD satellite view." />
     <meta name="theme-color" content="#0a0f1e" />
     <meta name="robots" content="index, follow" />
     <meta http-equiv="last-modified" content="2026-05-29" />
@@ -15,7 +15,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Cold Locator" />
     <meta property="og:title" content="Cold Locator — Find Colder Places Near You" />
-    <meta property="og:description" content="Escape the heat. Discover chill. An interactive temperature map showing places colder than your location, powered by real-time weather data from 145,000+ cities." />
+    <meta property="og:description" content="Escape the heat. Discover chill. An interactive map showing colder places with real-time weather, 7-day forecasts, severe weather alerts, and a NASA HD satellite view." />
     <meta property="og:url" content="https://colder.itiszack.com/" />
     <meta property="og:image" content="https://colder.itiszack.com/og-image.jpg" />
     <meta property="og:image:width" content="1200" />
@@ -23,7 +23,7 @@
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Cold Locator — Find Colder Places Near You" />
-    <meta name="twitter:description" content="Escape the heat. Discover chill. An interactive temperature map showing places colder than your location in real-time." />
+    <meta name="twitter:description" content="Escape the heat. Discover chill. An interactive map showing colder places with real-time weather, 7-day forecasts, severe weather alerts, and a NASA HD satellite view." />
     <meta name="twitter:image" content="https://colder.itiszack.com/og-image.jpg" />
 
     <link rel="llms" type="text/plain" href="/llms.txt" />
@@ -52,7 +52,7 @@
       "@type": "WebApplication",
       "name": "Cold Locator",
       "url": "https://colder.itiszack.com",
-      "description": "Find places colder than where you are right now — an interactive temperature map powered by real-time weather data from 145,000+ cities worldwide.",
+      "description": "Find places colder than where you are right now — an interactive temperature map with real-time weather, 7-day forecasts, severe weather alerts, and a NASA HD satellite view.",
       "applicationCategory": "WeatherApplication",
       "operatingSystem": "Any",
       "browserRequirements": "Requires JavaScript",
@@ -73,7 +73,7 @@
           "name": "How does Cold Locator find colder places?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Cold Locator compares your current temperature with real-time weather data from over 145,000 cities worldwide using the Open-Meteo API. It displays cities currently colder than your location, color-coded by temperature difference: gold (1–3°C), cyan (3–8°C), blue (8–15°C), and deep blue (15°C+ colder)."
+            "text": "Cold Locator compares your current temperature with weather data from over 145,000 cities worldwide using the Open-Meteo API. It features a 'Now' mode for real-time temperatures and a '7-Day Forecast' mode that tracks upcoming maximum temperatures and severe weather events, including US NWS alerts. It also offers an optional NASA HD Satellite view."
           }
         },
         {
@@ -97,7 +97,7 @@
           "name": "Can I embed Cold Locator on my website?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. Use an iframe with URL parameters to embed Cold Locator with a preset location: https://colder.itiszack.com/?lat=51.5&lng=-0.1&zoom=7&embed=1. Supported parameters: lat, lng, zoom, city (with optional country like London,UK), unit (C/F), and embed (1 for minimal UI). See https://colder.itiszack.com/llms.txt for the full integration guide."
+            "text": "Yes. Use an iframe with URL parameters to embed Cold Locator with a preset location: https://colder.itiszack.com/?lat=51.5&lng=-0.1&zoom=7&embed=1. Supported parameters: lat, lng, zoom, city, unit (C/F), viewMode (now/forecast), mapStyle (standard/satellite), and embed (1). See https://colder.itiszack.com/llms.txt for the full integration guide."
           }
         }
       ]
@@ -114,7 +114,7 @@
         { "@type": "HowToStep", "position": 1, "name": "Set your location", "text": "Open Cold Locator and allow location access, or search for your city by name." },
         { "@type": "HowToStep", "position": 2, "name": "Get your temperature", "text": "The app fetches your current temperature from real-time weather data via the Open-Meteo API." },
         { "@type": "HowToStep", "position": 3, "name": "See colder places", "text": "Cities colder than your location appear on the map as color-coded markers: gold (1–3°C colder), cyan (3–8°C), blue (8–15°C), deep blue (15°C+)." },
-        { "@type": "HowToStep", "position": 4, "name": "Explore the map", "text": "Zoom in to discover smaller cities, or zoom out to see major cold spots worldwide. Click any marker for details." }
+        { "@type": "HowToStep", "position": 4, "name": "Explore the map", "text": "Zoom in to discover smaller cities, or switch to the 7-Day Forecast mode to see upcoming cold weather and severe storm alerts. You can also toggle the NASA HD Satellite map layer." }
       ]
     }
     </script>
@@ -124,7 +124,7 @@
       "@type": "WebSite",
       "name": "Cold Locator",
       "url": "https://colder.itiszack.com",
-      "description": "Find places colder than where you are right now — an interactive temperature map powered by real-time weather data from 145,000+ cities worldwide.",
+      "description": "Find places colder than where you are right now — an interactive temperature map with real-time weather, 7-day forecasts, severe weather alerts, and a NASA HD satellite view.",
       "potentialAction": {
         "@type": "SearchAction",
         "target": "https://colder.itiszack.com/?city={search_term_string}",
@@ -164,7 +164,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <article style="max-width:640px;margin:40px auto;padding:24px;font-family:Inter,system-ui,sans-serif;color:#f0f4ff;background:#0a0f1e;line-height:1.6;">
         <header>
           <h1>Cold Locator — Find Colder Places Near You</h1>
-          <p><strong>Cold Locator</strong> is a free, interactive temperature map that finds places colder than where you are right now. Select your location, and the map instantly populates with cities that are currently colder — color-coded by how much colder they are. Powered by real-time weather data from <strong>145,000+ cities worldwide</strong>.</p>
+          <p><strong>Cold Locator</strong> is a free, interactive temperature map that finds places colder than where you are right now. Select your location to instantly see cities that are currently colder, or switch to the 7-day forecast mode to track upcoming cold weather and severe storm alerts. Features a NASA HD Satellite view and real-time weather data from <strong>145,000+ cities worldwide</strong>.</p>
         </header>
 
         <section>
@@ -173,7 +173,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <li><strong>Set your location</strong> — Allow location access or search for your city by name</li>
             <li><strong>Get your temperature</strong> — The app fetches your current temperature from real-time weather data via the Open-Meteo API</li>
             <li><strong>See colder places</strong> — Cities colder than your location appear on the map as color-coded markers</li>
-            <li><strong>Explore the map</strong> — Zoom in to discover smaller cities, or zoom out for major cold spots worldwide</li>
+            <li><strong>Explore the map</strong> — Switch to 7-Day Forecast mode for upcoming weather, toggle the NASA HD Satellite view, and zoom in to discover smaller cities</li>
           </ol>
         </section>
 
@@ -211,7 +211,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <section>
           <h2>Features</h2>
           <ul>
-            <li>Real-time weather data from 145,000+ cities worldwide</li>
+            <li>Real-time weather data and 7-day forecasts from 145,000+ cities worldwide</li>
+            <li>Severe weather tracking, including live National Weather Service (NWS) alerts for the US</li>
+            <li>Optional NASA GIBS HD Satellite view for a true-color global mosaic</li>
             <li>Color-coded markers showing temperature difference at a glance</li>
             <li>Toggle between °C and °F temperature units</li>
             <li>GPU-rendered interactive map powered by MapLibre GL</li>
@@ -229,7 +231,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         <footer>
           <h2>Summary</h2>
-          <p>Cold Locator is the fastest way to find places colder than your current location. It combines real-time weather data from the Open-Meteo API with a database of 145,000+ cities from GeoNames, rendered on a GPU-accelerated interactive map. Whether you're planning a trip to escape the heat, curious about global temperature differences, or building an AI integration — Cold Locator provides instant, visual answers with no sign-up required.</p>
+          <p>Cold Locator is the fastest way to find places colder than your current location. It combines real-time weather data and 7-day forecasts from the Open-Meteo API with live NWS severe weather alerts, rendered on a GPU-accelerated interactive map featuring a NASA HD Satellite layer. Whether you're planning a trip to escape the heat, curious about global temperature differences, or building an AI integration — Cold Locator provides instant, visual answers with no sign-up required.</p>
           <p style="margin-top:16px;font-size:0.9em;opacity:0.7;">This application requires JavaScript to run. Please enable JavaScript in your browser for the full interactive experience.</p>
         </footer>
       </article>

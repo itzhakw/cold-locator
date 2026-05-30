@@ -46,7 +46,8 @@ Per-step caps: max 20 tiles fetched, max 50 cities returned. Cascade is uncapped
 
 ### Map
 - **Library**: MapLibre GL JS v4 (GPU vector tiles)
-- **Tiles**: OpenFreeMap Liberty style
+- **Tiles**: OpenFreeMap Liberty style (default)
+- **Satellite Layer**: Optional NASA GIBS HD Satellite true-color layer (`VIIRS_SNPP_CorrectedReflectance_TrueColor`). Shows a global mosaic from the previous day, dynamically hiding all Liberty vector fill layers while retaining roads and labels on top.
 - **Markers**: Custom HTML `DivMarker` elements, React renders HTML string → injected into MapLibre `Marker`
 
 ### Forecast & Alert Modes
