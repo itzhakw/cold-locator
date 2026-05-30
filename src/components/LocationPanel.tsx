@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import type { UserLocation } from "../App";
+import type { UserLocation, ViewMode } from "../App";
 import type { TempUnit } from "../lib/mapUtils";
 import { formatTemp, geocodeCity, type GeocodingResult } from "../lib/mapUtils";
-import { fetchSingleWeather } from "../lib/weather";
+import { fetchSingleWeather, fetchSingleForecast } from "../lib/weather";
 
 interface Props {
   userLocation: UserLocation | null;
@@ -12,6 +12,8 @@ interface Props {
   onLocationSet: (loc: UserLocation, temp: number | null) => void;
   onError: (err: string) => void;
   embed?: boolean;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
 }
 
 type PanelState = "requesting" | "search" | "located" | "loading";
@@ -24,6 +26,8 @@ export default function LocationPanel({
   onLocationSet,
   onError,
   embed = false,
+  viewMode,
+  onViewModeChange,
 }: Props) {
   const [state, setState] = useState<PanelState>("requesting");
   const [searchQuery, setSearchQuery] = useState("");
@@ -54,7 +58,15 @@ export default function LocationPanel({
       async (pos) => {
         setState("loading");
         const { latitude: lat, longitude: lng } = pos.coords;
-        const weather = await fetchSingleWeather(lat, lng);
+        let temp: number | null = null;
+        if (viewMode === "forecast") {
+          const w = await fetchSingleForecast(lat, lng, 7);
+          temp = w?.temperatureMax ?? null;
+        } else {
+          const w = await fetchSingleWeather(lat, lng);
+          temp = w?.temperature ?? null;
+        }
+        
         (window as any).dataLayer = (window as any).dataLayer || [];
         (window as any).dataLayer.push({
           event: "detect_location",
@@ -63,7 +75,7 @@ export default function LocationPanel({
         });
         onLocationSet(
           { lat, lng, label: "Your location" },
-          weather?.temperature ?? null
+          temp
         );
         setState("located");
       },
@@ -94,12 +106,20 @@ export default function LocationPanel({
     }, 400);
   };
 
-  const handleSelectCity = async (r: GeocodingResult) => {
+    const handleSelectCity = async (r: GeocodingResult) => {
     setState("loading");
     setSuggestions([]);
     setSearchQuery("");
     setActiveIndex(-1);
-    const weather = await fetchSingleWeather(r.lat, r.lng);
+    
+    let temp: number | null = null;
+    if (viewMode === "forecast") {
+      const w = await fetchSingleForecast(r.lat, r.lng, 7);
+      temp = w?.temperatureMax ?? null;
+    } else {
+      const w = await fetchSingleWeather(r.lat, r.lng);
+      temp = w?.temperature ?? null;
+    }
     (window as any).dataLayer = (window as any).dataLayer || [];
     (window as any).dataLayer.push({
       event: "select_city",
@@ -112,19 +132,40 @@ export default function LocationPanel({
         lng: r.lng,
         label: r.admin1 ? `${r.name}, ${r.admin1}` : `${r.name}, ${r.country}`
       },
-      weather?.temperature ?? null
+      temp
     );
     setState("located");
   };
 
   if (state === "located" && userLocation) {
+    const isForecast = viewMode === "forecast";
+    const tempLabel = isForecast && userTemp !== null 
+      ? `${formatTemp(userTemp, unit)} (in 7d)` 
+      : (userTemp !== null ? formatTemp(userTemp, unit) : "");
+
     return (
       <div className={`location-panel located ${embed ? "embedded" : ""}`} id="location-panel">
         <div className="location-panel-inner">
           <span className="location-label">📍 {userLocation.label}</span>
           {userTemp !== null && (
-            <span className="location-temp">{formatTemp(userTemp, unit)}</span>
+            <span className="location-temp">{tempLabel}</span>
           )}
+          
+          <div className="mode-toggle">
+            <button
+              className={`mode-btn ${viewMode === "now" ? "active" : ""}`}
+              onClick={() => onViewModeChange("now")}
+            >
+              Now
+            </button>
+            <button
+              className={`mode-btn ${viewMode === "forecast" ? "active" : ""}`}
+              onClick={() => onViewModeChange("forecast")}
+            >
+              7 Days
+            </button>
+          </div>
+
           {!embed && (
             <button
               className="change-location-btn"

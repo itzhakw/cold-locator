@@ -7,6 +7,8 @@ import { geocodeCity } from "./lib/mapUtils";
 import { fetchSingleWeather } from "./lib/weather";
 import { parseUrlParams, hasLocationParams, type EmbedConfig } from "./lib/urlParams";
 
+export type ViewMode = "now" | "forecast";
+
 export interface UserLocation {
   lat: number;
   lng: number;
@@ -18,6 +20,7 @@ const embedConfig: EmbedConfig = parseUrlParams();
 export default function App() {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [userTemp, setUserTemp] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>(embedConfig.mode || "now");
   const [unit, setUnit] = useState<TempUnit>(() => {
     if (embedConfig.unit) return embedConfig.unit;
     return (localStorage.getItem("tempUnit") as TempUnit) || "C";
@@ -98,6 +101,8 @@ export default function App() {
           onLocationSet={handleLocationSet}
           onError={setLocationError}
           embed={embedConfig.embed}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
       )}
 
@@ -129,6 +134,8 @@ export default function App() {
           unit={unit}
           onUnitChange={handleUnitChange}
           onClose={() => setShowSettings(false)}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
       )}
 
@@ -138,6 +145,7 @@ export default function App() {
         unit={unit}
         onUserTempUpdate={setUserTemp}
         initialZoom={embedConfig.zoom}
+        viewMode={viewMode}
       />
     </main>
   );

@@ -7,6 +7,7 @@ export interface EmbedConfig {
   zoom?: number;
   unit?: TempUnit;
   embed: boolean;
+  mode?: "now" | "forecast";
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -22,6 +23,7 @@ export function parseUrlParams(): EmbedConfig {
   const rawZoom = params.get("zoom");
   const rawUnit = params.get("unit");
   const rawEmbed = params.get("embed");
+  const rawMode = params.get("mode");
 
   const lat = rawLat ? clamp(parseFloat(rawLat), -90, 90) : undefined;
   const lng = rawLng ? clamp(parseFloat(rawLng), -180, 180) : undefined;
@@ -44,6 +46,7 @@ export function parseUrlParams(): EmbedConfig {
     zoom: validZoom ? zoom : undefined,
     unit,
     embed: rawEmbed === "1",
+    mode: rawMode === "forecast" ? "forecast" : "now",
   };
 }
 

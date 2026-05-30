@@ -49,14 +49,28 @@ Per-step caps: max 20 tiles fetched, max 50 cities returned. Cascade is uncapped
 - **Tiles**: OpenFreeMap Liberty style
 - **Markers**: Custom HTML `DivMarker` elements, React renders HTML string → injected into MapLibre `Marker`
 
+### Forecast & Alert Modes
+- **Now Mode**: Compares current temperature between user and cities.
+- **7-Day Mode**: Fetches 7-day forecast (`temperature_2m_max`) from Open-Meteo. 
+  - Cities colder than the user's forecast max get a blue marker.
+  - Cities with severe weather forecast (`weather_code >= 51`) get an orange/red gradient marker (if not colder) or a storm badge (if colder).
+- **Regional Alerts**: Uses NWS active alerts as an invisible spatial index. 
+  - Proxied through Cloudflare Worker `/api/alerts` to bypass CORS.
+  - Client performs ray-casting point-in-polygon tests to find cities inside alert zones.
+  - Cities inside alert zones get a pulsing `⚠️` badge.
+  - The API health panel in settings queries `/api/health` to monitor upstream connectivity.
+
 ## Key Files
 - `src/lib/cityTiles.ts` — tile math, fetch, cache, filter
-- `src/lib/weather.ts` — Open-Meteo client
+- `src/lib/weather.ts` — Open-Meteo client (current & forecast)
+- `src/lib/alerts.ts` — NWS alert fetcher and point-in-polygon logic
 - `src/lib/weatherCodes.ts` — WMO code 0-99 decoder
 - `src/lib/mapUtils.ts` — temp formatting, colors, debounce, geocoding
-- `src/components/MapView.tsx` — map init, event wiring, marker orchestration
-- `src/components/CityMarker.tsx` — marker HTML renderer
+- `src/components/MapView.tsx` — map init, event wiring, dual-mode orchestration
+- `src/components/CityMarker.tsx` — marker HTML renderer (current & forecast variants)
 - `src/components/UserPin.tsx` — user location pin HTML renderer
+- `src/components/ApiStatus.tsx` — settings panel API health monitor
+- `src/worker.ts` — Cloudflare worker (SPA routing + `/api/alerts`, `/api/health` proxies)
 - `scripts/build-cities.ts` — one-time data build script
 
 ## Commands

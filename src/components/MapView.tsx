@@ -16,11 +16,16 @@ import {
 import {
   fetchWeatherBatch,
   fetchSingleWeather,
+  fetchForecastBatch,
+  fetchSingleForecast,
   type WeatherData,
+  type ForecastWeatherData
 } from "../lib/weather";
+import { fetchAlerts, citiesInAlertZones, type WeatherAlert } from "../lib/alerts";
 import { debounce } from "../lib/mapUtils";
-import { renderCityMarker } from "./CityMarker";
+import { renderCityMarker, renderForecastMarker } from "./CityMarker";
 import { renderUserPin } from "./UserPin";
+import type { ViewMode } from "../App";
 
 interface Props {
   userLocation: UserLocation | null;
@@ -28,6 +33,7 @@ interface Props {
   unit: TempUnit;
   onUserTempUpdate: (temp: number) => void;
   initialZoom?: number;
+  viewMode: ViewMode;
 }
 
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
@@ -40,6 +46,7 @@ export default function MapView({
   unit,
   onUserTempUpdate,
   initialZoom,
+  viewMode,
 }: Props) {
   const FLYTO_ZOOM = initialZoom ?? DEFAULT_FLYTO_ZOOM;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,33 +57,45 @@ export default function MapView({
   const unitRef = useRef(unit);
   const userTempRef = useRef(userTemp);
   const userLocationRef = useRef(userLocation);
+  const viewModeRef = useRef(viewMode);
+  const alertsCacheRef = useRef<WeatherAlert[]>([]);
 
   unitRef.current = unit;
   userTempRef.current = userTemp;
   userLocationRef.current = userLocation;
+  viewModeRef.current = viewMode;
 
   const cityPositionsRef = useRef<Map<number, { lat: number; lng: number }>>(
     new Map()
   );
   const cityDataRef = useRef<
-    Map<number, { city: City; weather: WeatherData }>
+    Map<number, { city: City; weather?: WeatherData; forecast?: ForecastWeatherData }>
   >(new Map());
 
   const refreshMarkerLabels = useCallback(() => {
-    for (const [id, { city, weather }] of cityDataRef.current) {
+    for (const [id, { city, weather, forecast }] of cityDataRef.current) {
       const marker = markersRef.current.get(id);
       if (!marker) continue;
       const uTemp = userTempRef.current ?? 0;
-      const delta = weather.temperature - uTemp;
-      if (delta > -1.0) {
-        marker.remove();
-        markersRef.current.delete(id);
-        cityDataRef.current.delete(id);
-        cityPositionsRef.current.delete(id);
-        continue;
+      
+      if (viewModeRef.current === "forecast" && forecast) {
+        const delta = forecast.temperatureMax - uTemp;
+        const alertsForCity = citiesInAlertZones([city], alertsCacheRef.current).get(city.id) || [];
+        const hasStorm = forecast.weatherCode >= 51;
+        const el = marker.getElement();
+        el.innerHTML = renderForecastMarker(city, forecast, delta, unitRef.current, hasStorm, alertsForCity.length);
+      } else if (viewModeRef.current === "now" && weather) {
+        const delta = weather.temperature - uTemp;
+        if (delta > -1.0) {
+          marker.remove();
+          markersRef.current.delete(id);
+          cityDataRef.current.delete(id);
+          cityPositionsRef.current.delete(id);
+          continue;
+        }
+        const el = marker.getElement();
+        el.innerHTML = renderCityMarker(city, weather, delta, unitRef.current);
       }
-      const el = marker.getElement();
-      el.innerHTML = renderCityMarker(city, weather, delta, unitRef.current);
     }
   }, []);
 
@@ -109,19 +128,56 @@ export default function MapView({
         }
       }
 
-      const addColdMarkers = (cities: City[], weatherMap: Map<number, import("../lib/weather").WeatherData>): number => {
+      const isForecast = viewModeRef.current === "forecast";
+
+      if (isForecast) {
+        alertsCacheRef.current = await fetchAlerts();
+      }
+
+      const addMarkers = (
+        cities: City[], 
+        weatherMap?: Map<number, WeatherData>,
+        forecastMap?: Map<number, ForecastWeatherData>
+      ): number => {
         let added = 0;
+        const cityAlerts = isForecast ? citiesInAlertZones(cities, alertsCacheRef.current) : new Map();
+
         for (const city of cities) {
           if (markersRef.current.has(city.id)) continue;
-          const weather = weatherMap.get(city.id);
-          if (!weather) continue;
-
+          
           const uTemp = userTempRef.current ?? 0;
-          const delta = weather.temperature - uTemp;
-          if (delta > -1.0) continue;
+          let delta = 0;
+          let elHtml = "";
+          let tempForEvent = 0;
+          
+          if (isForecast && forecastMap) {
+            const forecast = forecastMap.get(city.id);
+            if (!forecast) continue;
+            delta = forecast.temperatureMax - uTemp;
+            const hasStorm = forecast.weatherCode >= 51;
+            const alerts = cityAlerts.get(city.id) || [];
+            
+            // Only add if it's colder OR if there's a storm
+            if (delta > -1.0 && !hasStorm && alerts.length === 0) continue;
+            
+            elHtml = renderForecastMarker(city, forecast, delta, unitRef.current, hasStorm, alerts.length);
+            tempForEvent = forecast.temperatureMax;
+            cityDataRef.current.set(city.id, { city, forecast });
+          } else if (!isForecast && weatherMap) {
+            const weather = weatherMap.get(city.id);
+            if (!weather) continue;
+            delta = weather.temperature - uTemp;
+            if (delta > -1.0) continue;
+            
+            elHtml = renderCityMarker(city, weather, delta, unitRef.current);
+            tempForEvent = weather.temperature;
+            cityDataRef.current.set(city.id, { city, weather });
+          } else {
+            continue;
+          }
 
           const el = document.createElement("div");
-          el.innerHTML = renderCityMarker(city, weather, delta, unitRef.current);
+          el.innerHTML = elHtml;
           el.addEventListener("click", () => {
             (window as any).dataLayer = (window as any).dataLayer || [];
             (window as any).dataLayer.push({
@@ -129,7 +185,7 @@ export default function MapView({
               city_id: city.id,
               city_name: city.name,
               country: city.country,
-              temperature: weather.temperature,
+              temperature: tempForEvent,
               delta: delta
             });
             if (userLocationRef.current) {
@@ -149,7 +205,6 @@ export default function MapView({
             lat: city.lat,
             lng: city.lng,
           });
-          cityDataRef.current.set(city.id, { city, weather });
           added++;
         }
         return added;
@@ -160,10 +215,17 @@ export default function MapView({
       const cities = await getCitiesInView(bbox, zoom);
       const toFetch = cities.filter((c) => !markersRef.current.has(c.id));
       if (toFetch.length > 0) {
-        const weatherMap = await fetchWeatherBatch(
-          toFetch.map((c) => ({ id: c.id, lat: c.lat, lng: c.lng }))
-        );
-        coldFound = addColdMarkers(toFetch, weatherMap);
+        if (isForecast) {
+          const forecastMap = await fetchForecastBatch(
+            toFetch.map((c) => ({ id: c.id, lat: c.lat, lng: c.lng })), 7
+          );
+          coldFound = addMarkers(toFetch, undefined, forecastMap);
+        } else {
+          const weatherMap = await fetchWeatherBatch(
+            toFetch.map((c) => ({ id: c.id, lat: c.lat, lng: c.lng }))
+          );
+          coldFound = addMarkers(toFetch, weatherMap);
+        }
       }
 
       if (coldFound === 0) {
@@ -187,10 +249,17 @@ export default function MapView({
               (c) => !markersRef.current.has(c.id)
             );
             if (escToFetch.length > 0) {
-              const weatherMap = await fetchWeatherBatch(
-                escToFetch.map((c) => ({ id: c.id, lat: c.lat, lng: c.lng }))
-              );
-              addColdMarkers(escToFetch, weatherMap);
+              if (isForecast) {
+                const forecastMap = await fetchForecastBatch(
+                  escToFetch.map((c) => ({ id: c.id, lat: c.lat, lng: c.lng })), 7
+                );
+                addMarkers(escToFetch, undefined, forecastMap);
+              } else {
+                const weatherMap = await fetchWeatherBatch(
+                  escToFetch.map((c) => ({ id: c.id, lat: c.lat, lng: c.lng }))
+                );
+                addMarkers(escToFetch, weatherMap);
+              }
             }
           }
         } finally {
@@ -255,8 +324,11 @@ export default function MapView({
 
     if (userMarkerRef.current) userMarkerRef.current.remove();
 
+    const isForecast = viewMode === "forecast";
+    const dateStr = isForecast ? new Date(Date.now() + 7 * 86400000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : undefined;
+
     const el = document.createElement("div");
-    el.innerHTML = renderUserPin(userLocation.label, userTemp, unit);
+    el.innerHTML = renderUserPin(userLocation.label, userTemp, unit, dateStr);
     userMarkerRef.current = new maplibregl.Marker({
       element: el,
       anchor: "bottom",
@@ -266,26 +338,66 @@ export default function MapView({
 
     const destBbox = estimateBboxForZoom(userLocation, FLYTO_ZOOM);
 
+    const userWeatherPromise = isForecast 
+      ? fetchSingleForecast(userLocation.lat, userLocation.lng, 7).then(w => w ? { temperature: w.temperatureMax } : null)
+      : fetchSingleWeather(userLocation.lat, userLocation.lng);
+
     Promise.all([
-      fetchSingleWeather(userLocation.lat, userLocation.lng),
+      userWeatherPromise,
       prefetchTilesForBbox(destBbox, FLYTO_ZOOM),
     ]).then(async ([weather]) => {
       if (!weather) return;
       onUserTempUpdate(weather.temperature);
       const cities = await getCitiesInView(destBbox, FLYTO_ZOOM);
       if (cities.length > 0) {
-        await fetchWeatherBatch(
-          cities.map((c) => ({ id: c.id, lat: c.lat, lng: c.lng }))
-        );
+        if (isForecast) {
+          await fetchForecastBatch(
+            cities.map((c) => ({ id: c.id, lat: c.lat, lng: c.lng })), 7
+          );
+        } else {
+          await fetchWeatherBatch(
+            cities.map((c) => ({ id: c.id, lat: c.lat, lng: c.lng }))
+          );
+        }
       }
     });
   }, [userLocation]);
 
   useEffect(() => {
+    // Re-render user pin when viewMode or temp changes
     if (!userMarkerRef.current || !userLocation) return;
+    const isForecast = viewMode === "forecast";
+    const dateStr = isForecast ? new Date(Date.now() + 7 * 86400000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : undefined;
+    
     const el = userMarkerRef.current.getElement();
-    el.innerHTML = renderUserPin(userLocation.label, userTemp, unit);
-  }, [userTemp, unit, userLocation]);
+    el.innerHTML = renderUserPin(userLocation.label, userTemp, unit, dateStr);
+  }, [userTemp, unit, userLocation, viewMode]);
+
+  useEffect(() => {
+    // When viewMode changes, clear all markers and re-fetch
+    for (const [id, marker] of markersRef.current) {
+      marker.remove();
+    }
+    markersRef.current.clear();
+    cityPositionsRef.current.clear();
+    cityDataRef.current.clear();
+    
+    // We also need to refetch the user temp based on the new view mode
+    if (userLocationRef.current) {
+      const isForecast = viewMode === "forecast";
+      if (isForecast) {
+        fetchSingleForecast(userLocationRef.current.lat, userLocationRef.current.lng, 7).then(w => {
+          if (w) onUserTempUpdate(w.temperatureMax);
+        });
+      } else {
+        fetchSingleWeather(userLocationRef.current.lat, userLocationRef.current.lng).then(w => {
+          if (w) onUserTempUpdate(w.temperature);
+        });
+      }
+    }
+
+    if (mapRef.current) debouncedUpdate(mapRef.current);
+  }, [viewMode, debouncedUpdate, onUserTempUpdate]);
 
   useEffect(() => {
     if (mapRef.current) debouncedUpdate(mapRef.current);
