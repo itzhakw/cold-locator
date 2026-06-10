@@ -25,7 +25,7 @@ import { fetchAlerts, citiesInAlertZones, type WeatherAlert } from "../lib/alert
 import { debounce } from "../lib/mapUtils";
 import { renderCityMarker, renderForecastMarker } from "./CityMarker";
 import { renderUserPin } from "./UserPin";
-import type { ViewMode, MapStyleMode } from "../App";
+import type { ViewMode, MapStyleMode, CustomMarker } from "../App";
 
 interface Props {
   userLocation: UserLocation | null;
@@ -35,6 +35,8 @@ interface Props {
   initialZoom?: number;
   viewMode: ViewMode;
   mapStyle: MapStyleMode;
+  savedMarkers: CustomMarker[];
+  mapFocus: { lat: number; lng: number; zoom?: number; timestamp: number } | null;
 }
 
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
@@ -49,11 +51,14 @@ export default function MapView({
   initialZoom,
   viewMode,
   mapStyle,
+  savedMarkers,
+  mapFocus,
 }: Props) {
   const FLYTO_ZOOM = initialZoom ?? DEFAULT_FLYTO_ZOOM;
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<Map<number, maplibregl.Marker>>(new Map());
+  const customMarkersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
   const userMarkerRef = useRef<maplibregl.Marker | null>(null);
   const escalationLoaderRef = useRef<maplibregl.Marker | null>(null);
   const unitRef = useRef(unit);
@@ -352,6 +357,7 @@ export default function MapView({
     return () => {
       map.remove();
       mapRef.current = null;
+      customMarkersRef.current.clear();
     };
   }, [debouncedUpdate]);
 
@@ -480,6 +486,67 @@ export default function MapView({
       map.once("styledata", applyMapStyle);
     }
   }, [mapStyle]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const savedIds = new Set(savedMarkers.map((m) => m.id));
+    for (const [id, marker] of customMarkersRef.current) {
+      if (!savedIds.has(id)) {
+        marker.remove();
+        customMarkersRef.current.delete(id);
+      }
+    }
+
+    for (const m of savedMarkers) {
+      const existingMarker = customMarkersRef.current.get(m.id);
+      if (existingMarker) {
+        const el = existingMarker.getElement();
+        const nameEl = el.querySelector(".custom-marker-name");
+        if (nameEl && nameEl.textContent !== m.name) {
+          nameEl.textContent = m.name;
+        }
+      } else {
+        const el = document.createElement("div");
+        el.className = "custom-marker";
+        el.innerHTML = `
+          <div class="custom-marker-body">
+            <span class="custom-marker-icon">📌</span>
+            <span class="custom-marker-name">${m.name}</span>
+          </div>
+        `;
+
+        el.addEventListener("click", () => {
+          const destination = `${m.lat},${m.lng}`;
+          const origin = userLocationRef.current
+            ? `${userLocationRef.current.lat},${userLocationRef.current.lng}`
+            : "Current+Location";
+          const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`;
+          window.open(url, "_blank", "noopener");
+        });
+
+        const marker = new maplibregl.Marker({
+          element: el,
+          anchor: "bottom",
+        })
+          .setLngLat([m.lng, m.lat])
+          .addTo(map);
+
+        customMarkersRef.current.set(m.id, marker);
+      }
+    }
+  }, [savedMarkers]);
+
+  useEffect(() => {
+    if (!mapFocus || !mapRef.current) return;
+    mapRef.current.flyTo({
+      center: [mapFocus.lng, mapFocus.lat],
+      zoom: mapFocus.zoom ?? 10,
+      duration: 1500,
+      essential: true,
+    });
+  }, [mapFocus]);
 
   return (
     <div

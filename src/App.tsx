@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import MapView from "./components/MapView";
 import LocationPanel from "./components/LocationPanel";
 import SettingsPanel from "./components/SettingsPanel";
+import SavedMarkersPanel from "./components/SavedMarkersPanel";
 import type { TempUnit } from "./lib/mapUtils";
 import { geocodeCity } from "./lib/mapUtils";
 import { fetchSingleWeather } from "./lib/weather";
@@ -14,6 +15,14 @@ export interface UserLocation {
   lat: number;
   lng: number;
   label: string;
+}
+
+export interface CustomMarker {
+  id: string;
+  name: string;
+  address: string;
+  lat: number;
+  lng: number;
 }
 
 const embedConfig: EmbedConfig = parseUrlParams();
@@ -34,6 +43,54 @@ export default function App() {
   const [embedLocationLoading, setEmbedLocationLoading] = useState(
     hasLocationParams(embedConfig)
   );
+  const [savedMarkers, setSavedMarkers] = useState<CustomMarker[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("savedMarkers") || "[]");
+    } catch {
+      return [];
+    }
+  });
+  const [showSavedMarkers, setShowSavedMarkers] = useState(false);
+  const [mapFocus, setMapFocus] = useState<{ lat: number; lng: number; zoom?: number; timestamp: number } | null>(null);
+
+  const toggleSavedMarkers = useCallback(() => {
+    setShowSavedMarkers((s) => !s);
+    setShowSettings(false);
+  }, []);
+
+  const toggleSettings = useCallback(() => {
+    setShowSettings((s) => {
+      const next = !s;
+      if (next) {
+        (window as any).dataLayer = (window as any).dataLayer || [];
+        (window as any).dataLayer.push({
+          event: "open_settings",
+        });
+      }
+      return next;
+    });
+    setShowSavedMarkers(false);
+  }, []);
+
+  const handleAddMarker = useCallback((marker: CustomMarker) => {
+    setSavedMarkers((prev) => {
+      const next = [...prev, marker];
+      localStorage.setItem("savedMarkers", JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const handleDeleteMarker = useCallback((id: string) => {
+    setSavedMarkers((prev) => {
+      const next = prev.filter((m) => m.id !== id);
+      localStorage.setItem("savedMarkers", JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const handleFocusMarker = useCallback((lat: number, lng: number) => {
+    setMapFocus({ lat, lng, zoom: 12, timestamp: Date.now() });
+  }, []);
 
   const handleUnitChange = useCallback((u: TempUnit) => {
     setUnit(u);
@@ -116,26 +173,26 @@ export default function App() {
       )}
 
       {!embedConfig.embed && (
-        <button
-          id="settings-btn"
-          className="settings-btn"
-          onClick={() => {
-            setShowSettings((s) => {
-              const next = !s;
-              if (next) {
-                (window as any).dataLayer = (window as any).dataLayer || [];
-                (window as any).dataLayer.push({
-                  event: "open_settings"
-                });
-              }
-              return next;
-            });
-          }}
-          aria-label="Open settings"
-          title="Settings"
-        >
-          ⚙️
-        </button>
+        <>
+          <button
+            id="saved-markers-btn"
+            className={`saved-markers-btn ${showSavedMarkers ? "active" : ""}`}
+            onClick={toggleSavedMarkers}
+            aria-label="Open saved locations"
+            title="Saved Locations"
+          >
+            📌
+          </button>
+          <button
+            id="settings-btn"
+            className={`settings-btn ${showSettings ? "active" : ""}`}
+            onClick={toggleSettings}
+            aria-label="Open settings"
+            title="Settings"
+          >
+            ⚙️
+          </button>
+        </>
       )}
 
       {showSettings && (
@@ -150,6 +207,16 @@ export default function App() {
         />
       )}
 
+      {showSavedMarkers && (
+        <SavedMarkersPanel
+          savedMarkers={savedMarkers}
+          onAddMarker={handleAddMarker}
+          onDeleteMarker={handleDeleteMarker}
+          onClose={() => setShowSavedMarkers(false)}
+          onFocusMarker={handleFocusMarker}
+        />
+      )}
+
       <MapView
         userLocation={userLocation}
         userTemp={userTemp}
@@ -158,6 +225,8 @@ export default function App() {
         initialZoom={embedConfig.zoom}
         viewMode={viewMode}
         mapStyle={mapStyle}
+        savedMarkers={savedMarkers}
+        mapFocus={mapFocus}
       />
     </main>
   );
