@@ -37,6 +37,7 @@ interface Props {
   mapStyle: MapStyleMode;
   savedMarkers: CustomMarker[];
   mapFocus: { lat: number; lng: number; zoom?: number; timestamp: number } | null;
+  onMapLongClick: (lat: number, lng: number) => void;
 }
 
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
@@ -53,6 +54,7 @@ export default function MapView({
   mapStyle,
   savedMarkers,
   mapFocus,
+  onMapLongClick,
 }: Props) {
   const FLYTO_ZOOM = initialZoom ?? DEFAULT_FLYTO_ZOOM;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -66,11 +68,13 @@ export default function MapView({
   const userLocationRef = useRef(userLocation);
   const viewModeRef = useRef(viewMode);
   const alertsCacheRef = useRef<WeatherAlert[]>([]);
+  const onMapLongClickRef = useRef(onMapLongClick);
 
   unitRef.current = unit;
   userTempRef.current = userTemp;
   userLocationRef.current = userLocation;
   viewModeRef.current = viewMode;
+  onMapLongClickRef.current = onMapLongClick;
 
   const cityPositionsRef = useRef<Map<number, { lat: number; lng: number }>>(
     new Map()
@@ -308,6 +312,10 @@ export default function MapView({
 
     map.on("moveend", () => debouncedUpdate(map));
     map.on("zoomend", () => debouncedUpdate(map));
+    map.on("contextmenu", (e) => {
+      e.originalEvent.preventDefault();
+      onMapLongClickRef.current(e.lngLat.lat, e.lngLat.lng);
+    });
     map.on("load", () => {
       // Add NASA GIBS satellite raster layers
       const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];

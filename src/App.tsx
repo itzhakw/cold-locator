@@ -3,6 +3,7 @@ import MapView from "./components/MapView";
 import LocationPanel from "./components/LocationPanel";
 import SettingsPanel from "./components/SettingsPanel";
 import SavedMarkersPanel from "./components/SavedMarkersPanel";
+import AddMarkerDialog from "./components/AddMarkerDialog";
 import type { TempUnit } from "./lib/mapUtils";
 import { geocodeCity } from "./lib/mapUtils";
 import { fetchSingleWeather } from "./lib/weather";
@@ -52,6 +53,7 @@ export default function App() {
   });
   const [showSavedMarkers, setShowSavedMarkers] = useState(false);
   const [mapFocus, setMapFocus] = useState<{ lat: number; lng: number; zoom?: number; timestamp: number } | null>(null);
+  const [pendingMarkerCoords, setPendingMarkerCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const toggleSavedMarkers = useCallback(() => {
     setShowSavedMarkers((s) => !s);
@@ -90,6 +92,10 @@ export default function App() {
 
   const handleFocusMarker = useCallback((lat: number, lng: number) => {
     setMapFocus({ lat, lng, zoom: 12, timestamp: Date.now() });
+  }, []);
+
+  const handleMapLongClick = useCallback((lat: number, lng: number) => {
+    setPendingMarkerCoords({ lat, lng });
   }, []);
 
   const handleUnitChange = useCallback((u: TempUnit) => {
@@ -217,6 +223,24 @@ export default function App() {
         />
       )}
 
+      {pendingMarkerCoords && (
+        <AddMarkerDialog
+          lat={pendingMarkerCoords.lat}
+          lng={pendingMarkerCoords.lng}
+          onSave={(name, address) => {
+            handleAddMarker({
+              id: Date.now().toString(),
+              name,
+              address,
+              lat: pendingMarkerCoords.lat,
+              lng: pendingMarkerCoords.lng,
+            });
+            setPendingMarkerCoords(null);
+          }}
+          onCancel={() => setPendingMarkerCoords(null)}
+        />
+      )}
+
       <MapView
         userLocation={userLocation}
         userTemp={userTemp}
@@ -227,6 +251,7 @@ export default function App() {
         mapStyle={mapStyle}
         savedMarkers={savedMarkers}
         mapFocus={mapFocus}
+        onMapLongClick={handleMapLongClick}
       />
     </main>
   );
